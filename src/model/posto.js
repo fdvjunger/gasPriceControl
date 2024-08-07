@@ -6,10 +6,10 @@ const PostoSchema = new mongoose.Schema({
   longitude: { type: Number, required: true },
   endereco: { type: String, required: true },
   precosCombustiveis: {
-    gasolina: { type: Number, required: true },
-    etanol: { type: Number, required: true },
-    diesel: { type: Number, required: true },
-    gnv: { type: Number, required: true }
+    gasolina: { type: Number },
+    etanol: { type: Number},
+    diesel: { type: Number},
+    gnv: { type: Number}
   },
   dataAtualizacao: { type: Date, default: Date.now },
   localizacao: {
