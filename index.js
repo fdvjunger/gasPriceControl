@@ -4,11 +4,21 @@ const postosRouter = require('./src/routes/postos');
 const authMiddleware = require('./src/middleware/auth');
 const authRouter = require('./src/routes/auth');
 
+
+
 const app = express();
 app.use(express.json());
 
-app.use('/postos', postosRouter);
+
+
 app.use('/auth', authRouter);
+
+
+
+app.use(authMiddleware);
+
+app.use('/postos', postosRouter);
+
 
 // Exemplo de rota protegida
 app.get('/protected', authMiddleware, (req, res) => {
