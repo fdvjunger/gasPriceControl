@@ -86,6 +86,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+//filtrar posto por id
 router.get('/:id', async (req, res) => {
   try {
     const posto = await Posto.findById(req.params.id);
