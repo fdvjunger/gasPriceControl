@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
 
+const mongoConnect = 'mongodb+srv://fernandovjunger:1234@gimmefuel.iwttv.mongodb.net/?retryWrites=true&w=majority&appName=gimmefuel';
+
+
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://127.0.0.1:27017/postos', {
+    await mongoose.connect(mongoConnect, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

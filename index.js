@@ -1,26 +1,18 @@
 const express = require('express');
-const mongoose = require('./src/db/connect'); // Arquivo separado para conexão do MongoDB
+const mongoose = require('./src/db/connect'); 
 const postosRouter = require('./src/routes/postos');
 const authMiddleware = require('./src/middleware/auth');
 const authRouter = require('./src/routes/auth');
 
-
-
 const app = express();
 app.use(express.json());
 
-
-
 app.use('/auth', authRouter);
-
-
-
 app.use(authMiddleware);
 
 app.use('/postos', postosRouter);
 
-
-// Exemplo de rota protegida
+// Rota protegida
 app.get('/protected', authMiddleware, (req, res) => {
   res.json({ message: 'Acesso concedido' });
 });

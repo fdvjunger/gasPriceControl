@@ -7,13 +7,16 @@ const secretKey = 'your-secret-key'; // TODO: Substitua por uma chave secreta re
 
 // Rota de registro
 router.post('/register', async (req, res) => {
+  console.log("registrando novo usuário");
   const { username, email, password } = req.body;
   try {
     const user = new User({ username, email, password });
     await user.save();
     res.status(201).json({ message: 'Usuário registrado com sucesso' });
+    console.log(`Usuário ${user.username} registrado com sucesso`);    
   } catch (err) {
     res.status(400).json({ error: err.message });
+    console.log(err); 
   }
 });
 
@@ -23,7 +26,8 @@ router.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'Usuário não encontrado' });
+      console.log('Usuário não encontrado'); 
+      return res.status(404).json({ message: 'Usuário não encontrado' });   
     }
 
     const isMatch = await user.comparePassword(password);
@@ -32,6 +36,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, secretKey, { expiresIn: '1h' });
+    console.log(`Usuário ${user.username} logado, expira em 1h`); 
     res.json({ token });
   } catch (err) {
     res.status(400).json({ error: err.message });
