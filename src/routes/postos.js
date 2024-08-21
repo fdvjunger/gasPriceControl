@@ -7,28 +7,37 @@ const Posto = require('../model/posto');
 router.get('/proximos', async (req, res) => {
   try {
     console.log('Buscando postos próximos');
-    const { lat, lon, radius, page = 1, limit = 10 } = req.query;
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(lon);
-    const distance = parseFloat(radius);
-
+    // Obtenha e valide os parâmetros da query
+    const { latitude, longitude, raio, page = 1, limit = 10 } = req.query;
+    
+    // Validação e conversão dos parâmetros
+    const lat = parseFloat(latitude);
+    const lon = parseFloat(longitude);
+    const distance = parseFloat(raio) * 1000;
+    
+    if (isNaN(lat) || isNaN(lon) || isNaN(distance)) {
+      return res.status(400).json({ message: 'Parâmetros inválidos. Certifique-se de fornecer latitude, longitude e raio válidos.' });
+    }
+    
     // Calcular o número de documentos a pular (skip) com base na página e no limite
     const skip = (page - 1) * limit;
 
+    // Realizar a busca de postos
     const postos = await Posto.find({
-      location: {
+      localizacao: {
         $geoWithin: {
-          $centerSphere: [[longitude, latitude], distance / 6378.1] // Dividir por 6378.1 para converter km para a unidade esférica
+          $centerSphere: [[lon, lat], distance / 6378.1] // Convertendo km para radianos
         }
       }
     })
     .skip(skip)
     .limit(parseInt(limit));
 
+    // Contar o total de documentos
     const total = await Posto.countDocuments({
-      location: {
+      localizacao: {
         $geoWithin: {
-          $centerSphere: [[longitude, latitude], distance / 6378.1]
+          $centerSphere: [[lon, lat], distance / 6378.1]
         }
       }
     });
