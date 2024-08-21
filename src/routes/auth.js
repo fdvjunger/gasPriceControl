@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../model/usuario');
 const router = express.Router();
 
+
 const secretKey = 'your-secret-key'; // TODO: Substitua por uma chave secreta real
 
 // Rota de registro
