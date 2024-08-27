@@ -7,31 +7,43 @@ const Posto = require('../model/posto');
 router.get('/proximos', async (req, res) => {
   try {
     console.log('Buscando postos próximos');
+    
     // Obtenha e valide os parâmetros da query
-    const { latitude, longitude, raio, page = 1, limit = 10 } = req.query;
+    const { latitude, longitude, raio, combustivel, top = 10, page = 1, limit = 10 } = req.query;
     
     // Validação e conversão dos parâmetros
     const lat = parseFloat(latitude);
     const lon = parseFloat(longitude);
     const distance = parseFloat(raio) * 1000;
-    
+
     if (isNaN(lat) || isNaN(lon) || isNaN(distance)) {
       return res.status(400).json({ message: 'Parâmetros inválidos. Certifique-se de fornecer latitude, longitude e raio válidos.' });
     }
-    
+
     // Calcular o número de documentos a pular (skip) com base na página e no limite
     const skip = (page - 1) * limit;
 
-    // Realizar a busca de postos
+    // Criar o objeto de filtro para o preço do combustível, se fornecido
+    let precoFilter = {};
+    if (combustivel) {
+      precoFilter[`precosCombustiveis.${combustivel}`] = { $exists: true };
+    }
+
+    // Realizar a busca de postos, ordenando pelo preço do combustível, se fornecido
     const postos = await Posto.find({
       localizacao: {
         $geoWithin: {
           $centerSphere: [[lon, lat], distance / 6378.1] // Convertendo km para radianos
         }
-      }
+      },
+      ...precoFilter
     })
+    .sort(combustivel ? { [`precosCombustiveis.${combustivel}`]: 1 } : {}) // Ordena pelo preço ascendente se o combustível for especificado
     .skip(skip)
     .limit(parseInt(limit));
+
+    // Filtrar os top 'N' postos com os menores preços, se especificado
+    const filteredPostos = combustivel ? postos.slice(0, top) : postos;
 
     // Contar o total de documentos
     const total = await Posto.countDocuments({
@@ -39,7 +51,8 @@ router.get('/proximos', async (req, res) => {
         $geoWithin: {
           $centerSphere: [[lon, lat], distance / 6378.1]
         }
-      }
+      },
+      ...precoFilter
     });
 
     res.json({
@@ -47,12 +60,13 @@ router.get('/proximos', async (req, res) => {
       page: parseInt(page),
       limit: parseInt(limit),
       totalPages: Math.ceil(total / limit),
-      postos
+      postos: filteredPostos
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 // Criar um novo posto
 router.post('/', async (req, res) => {
