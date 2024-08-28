@@ -68,12 +68,39 @@ router.get('/proximos', async (req, res) => {
 });
 
 
-// Criar um novo posto
+// Criar ou atualizar um posto
 router.post('/', async (req, res) => {
-  console.log('criando novo posto');
+  console.log('Tentando criar ou atualizar um posto');
   try {
     const { nome, latitude, longitude, endereco, precosCombustiveis } = req.body;
 
+    // Definindo o raio de 10 metros em radianos
+    const raioEmMetros = 10;
+    const raioEmRadianos = raioEmMetros / 6378100; // Convertendo metros para radianos (6378100 metros é o raio da Terra)
+
+    // Verificar se já existe um posto dentro de um raio de 10 metros
+    const postoExistente = await Posto.findOne({
+      localizacao: {
+        $geoWithin: {
+          $centerSphere: [[longitude, latitude], raioEmRadianos]
+        }
+      }
+    });
+
+    if (postoExistente) {
+      // Atualiza apenas os preços que foram enviados e não são null ou zero
+      for (const [key, value] of Object.entries(precosCombustiveis)) {
+        if (value !== null && value !== 0) {
+          postoExistente.precosCombustiveis[key] = value;
+        }
+      }
+
+      await postoExistente.save();
+      console.log(`Posto ${postoExistente.nome} atualizado com novos preços`);
+      return res.status(200).send(postoExistente);
+    }
+
+    // Se não existir, crie um novo posto
     const novoPosto = new Posto({
       nome,
       latitude,
@@ -87,13 +114,14 @@ router.post('/', async (req, res) => {
     });
 
     await novoPosto.save();
-    console.log(`Posto ${novoPosto.nome} criado com sucesso`)
+    console.log(`Posto ${novoPosto.nome} criado com sucesso`);
     res.status(201).send(novoPosto);
   } catch (err) {
-    console.error('Erro ao criar posto:', err);
+    console.error('Erro ao criar ou atualizar posto:', err);
     res.status(400).send(err);
   }
 });
+
 
 // Listar todos os postos
 router.get('/', async (req, res) => {
