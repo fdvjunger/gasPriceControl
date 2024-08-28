@@ -185,6 +185,31 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/proximidade/:latitude/:longitude', async (req, res) => {
+  const { latitude, longitude } = req.params;
+  const raioMetros = 10 / 6378137; // 10 metros em radianos
+
+  console.log(`Filtrando posto num raio de 10 metros a partir da localização (${latitude}, ${longitude})`);
+
+  try {
+    const postos = await Posto.find({
+      localizacao: {
+        $geoWithin: {
+          $centerSphere: [[longitude, latitude], raioMetros]
+        }
+      }
+    });
+
+    if (postos.length === 0) {
+      return res.status(404).send('Nenhum posto encontrado dentro do raio de 10 metros');
+    }
+
+    res.send(postos);
+  } catch (err) {
+    console.error('Erro na busca geoespacial:', err);
+    res.status(500).send('Erro ao buscar postos');
+  }
+});
 
 
 module.exports = router;
